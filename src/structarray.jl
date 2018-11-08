@@ -82,7 +82,7 @@ end
 @generated function fields(t::Type{T}) where {T<:Tuple}
     return :($(Expr(:tuple, [QuoteNode(Symbol("x$f")) for f in fieldnames(T)]...)))
 end
-fields(::Type{StructArray{T, N, C}}) where C = fields(C)
+fields(::Type{StructArray{T, N, C}}) where {T, N, C} = fields(C)
 
 @generated function Base.push!(s::StructArray{T, 1, C}, vals) where {T, C}
     args = []
