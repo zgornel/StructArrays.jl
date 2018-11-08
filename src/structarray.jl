@@ -82,11 +82,11 @@ end
 @generated function fields(t::Type{T}) where {T<:Tuple}
     return :($(Expr(:tuple, [QuoteNode(Symbol("x$f")) for f in fieldnames(T)]...)))
 end
+fields(::Type{StructArray{T, N, C}}) where C = fields(C)
 
-
-@generated function Base.push!(s::StructArray{T, 1}, vals) where {T}
+@generated function Base.push!(s::StructArray{T, 1, C}, vals) where {T, C}
     args = []
-    for key in fields(T)
+    for key in fields(C)
         field = Expr(:., :s, Expr(:quote, key))
         val = Expr(:., :vals, Expr(:quote, key))
         push!(args, :(push!($field, $val)))
@@ -95,9 +95,9 @@ end
     Expr(:block, args...)
 end
 
-@generated function Base.append!(s::StructArray{T, 1}, vals) where {T}
+@generated function Base.append!(s::StructArray{T, 1, C}, vals) where {T, C}
     args = []
-    for key in fields(T)
+    for key in fields(C)
         field = Expr(:., :s, Expr(:quote, key))
         val = Expr(:., :vals, Expr(:quote, key))
         push!(args, :(append!($field, $val)))
@@ -109,7 +109,7 @@ end
 function Base.cat(args::StructArray...; dims)
     f = key -> cat((getproperty(t, key) for t in args)...; dims=dims)
     T = mapreduce(eltype, promote_type, args)
-    StructArray{T}(map(f, fields(eltype(args[1]))))
+    StructArray{T}(map(f, fields(typeof(args[1]))))
 end
 
 function Base.resize!(s::StructArray, i::Integer)
@@ -124,7 +124,7 @@ for op in [:hcat, :vcat]
         function Base.$op(args::StructArray...)
             f = key -> $op((getproperty(t, key) for t in args)...)
             T = mapreduce(eltype, promote_type, args)
-            StructArray{T}(map(f, fields(eltype(args[1]))))
+            StructArray{T}(map(f, fields(typeof(args[1]))))
         end
     end
 end
