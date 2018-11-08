@@ -7,9 +7,9 @@ eltypes(::Type{NamedTuple{K, V}}) where {K, V} = eltypes(V)
 
 Base.@pure SkipConstructor(::Type) = false
 
-@generated function get_ith(s::StructArray{T}, I...) where {T}
+@generated function get_ith(s::StructArray{T, N, C}, I...) where {T, N, C}
     args = []
-    for key in fields(T)
+    for key in fields(C)
         field = Expr(:., :s, Expr(:quote, key))
         push!(args, :($field[I...]))
     end
@@ -19,9 +19,9 @@ Base.@pure SkipConstructor(::Type) = false
     end
 end
 
-@generated function set_ith!(s::StructArray{T}, vals, I...) where {T}
+@generated function set_ith!(s::StructArray{T, N, C}, vals, I...) where {T, N, C}
     args = []
-    for key in fields(T)
+    for key in fields(C)
         field = Expr(:., :s, Expr(:quote, key))
         val = Expr(:., :vals, Expr(:quote, key))
         push!(args, :($field[I...] = $val))
